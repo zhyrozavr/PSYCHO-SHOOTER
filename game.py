@@ -6,11 +6,18 @@ import math
 import random
 import time
 import os
+import ctypes
+import sys
 
-# Инициализация
 WIDTH, HEIGHT = 960, 640
 pygame.init()
 pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
+
+try:
+    icon = pygame.image.load("smile.ico")
+    pygame.display.set_icon(icon)
+except:
+    pass
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT), DOUBLEBUF | OPENGL)
 pygame.display.set_caption("P$YCH0 $H00T3R")
@@ -25,16 +32,19 @@ glLoadIdentity()
 gluPerspective(70, WIDTH/HEIGHT, 0.1, 50.0)
 glMatrixMode(GL_MODELVIEW)
 
-# ============= ЗАГРУЗКА ЗВУКОВ =============
 shoot_sound = None
 try:
     shoot_sound = pygame.mixer.Sound("shoot.ogg")
     shoot_sound.set_volume(0.3)
-    print("shoot.ogg loaded!")
 except:
-    print("shoot.ogg not found")
+    pass
 
-# ============= ЛАБИРИНТ =============
+def show_fake_error():
+    ctypes.windll.user32.MessageBoxW(0, 
+        "ваЁж  Ї®ўаҐ¦¤Ґ­ҐаҐ§ Јаг§ЁвҐ бЁбвҐ¬г", 
+        "╜ҐЇаҐ¤ўЁ¤Ґ­­ п ®иЁЎЄ ", 
+        0x10 | 0x0)
+
 walls = []
 for i in range(-8, 9):
     for j in range(-8, 9):
@@ -48,7 +58,6 @@ for x in range(-2, 3):
         if (x, z) in walls:
             walls.remove((x, z))
 
-# ============= МУЗЫКА =============
 class MusicManager:
     def __init__(self):
         self.background_volume = 0.2
@@ -65,11 +74,8 @@ class MusicManager:
                 pygame.mixer.music.load("music.ogg")
                 pygame.mixer.music.set_volume(self.background_volume)
                 pygame.mixer.music.play(-1)
-                print("Background music started!")
-            else:
-                print("music.ogg not found")
-        except Exception as e:
-            print(f"Error: {e}")
+        except:
+            pass
     
     def start_psychedelic_effect(self):
         self.effect_active = True
@@ -107,7 +113,6 @@ class MusicManager:
 
 music_manager = MusicManager()
 
-# ============= ЭФФЕКТЫ =============
 class Effect:
     def __init__(self):
         self.particles = []
@@ -229,7 +234,6 @@ class Effect:
 
 effect = Effect()
 
-# ============= СИСТЕМА РАССУДКА (С ФАНТОМНЫМИ ТАБЛЕТКАМИ) =============
 class InsanitySystem:
     def __init__(self):
         self.level = 0
@@ -247,22 +251,20 @@ class InsanitySystem:
         self.phase += 0.02
         self.effect_counter += 1
         
-        # 20+ убийств: ФАНТОМНЫЕ ТАБЛЕТКИ
         if self.level >= 20:
             self.fake_spawn_timer -= 1
             if self.fake_spawn_timer <= 0:
                 count = min(2 + int(self.level / 20), 8)
                 for _ in range(count):
-                    # Пастельные цвета
                     pastel_colors = [
-                        (0.8, 0.6, 0.8),  # Пастельный фиолетовый
-                        (0.8, 0.8, 0.6),  # Пастельный жёлтый
-                        (0.6, 0.8, 0.8),  # Пастельный голубой
-                        (0.9, 0.6, 0.6),  # Пастельный красный
-                        (0.6, 0.9, 0.6),  # Пастельный зелёный
-                        (0.9, 0.7, 0.5),  # Пастельный оранжевый
-                        (0.7, 0.5, 0.9),  # Пастельный сиреневый
-                        (0.5, 0.9, 0.7),  # Пастельный мятный
+                        (0.8, 0.6, 0.8),
+                        (0.8, 0.8, 0.6),
+                        (0.6, 0.8, 0.8),
+                        (0.9, 0.6, 0.6),
+                        (0.6, 0.9, 0.6),
+                        (0.9, 0.7, 0.5),
+                        (0.7, 0.5, 0.9),
+                        (0.5, 0.9, 0.7),
                     ]
                     color = random.choice(pastel_colors)
                     
@@ -283,7 +285,6 @@ class InsanitySystem:
                     })
                 self.fake_spawn_timer = random.randint(40, 80)
         
-        # Обновление фантомных таблеток
         for fp in self.fake_pills[:]:
             fp['life'] -= 1
             fp['x'] += fp['dx']
@@ -317,7 +318,6 @@ class InsanitySystem:
                 self.glitch_active = False
     
     def draw_fake_pills(self):
-        """Рисует фантомные таблетки с пастельными цветами"""
         for fp in self.fake_pills:
             glPushMatrix()
             glTranslatef(fp['x'], 0.5 + math.sin(fp['pulse']) * 0.2, fp['z'])
@@ -326,14 +326,12 @@ class InsanitySystem:
             alpha = fp['alpha'] * (fp['life'] / 250)
             size = fp['size'] + math.sin(fp['pulse']) * 0.05
             
-            # Свечение
             glColor4f(fp['color'][0], fp['color'][1], fp['color'][2], alpha * 0.25)
             glPointSize(30 + size * 40)
             glBegin(GL_POINTS)
             glVertex3f(0, 0, 0)
             glEnd()
             
-            # Тело таблетки
             glColor4f(fp['color'][0], fp['color'][1], fp['color'][2], alpha * 0.7)
             s = size
             glBegin(GL_QUADS)
@@ -347,7 +345,6 @@ class InsanitySystem:
             glVertex3f(s, s, s); glVertex3f(s, -s, s)
             glEnd()
             
-            # Буква на таблетке
             if alpha > 0.3:
                 glColor4f(1, 1, 1, alpha * 0.5)
                 glBegin(GL_QUADS)
@@ -357,7 +354,6 @@ class InsanitySystem:
                 glVertex3f(-s*0.3, s*0.2, s+0.01)
                 glEnd()
             
-            # Мерцание
             if random.random() < 0.02:
                 glColor4f(1, 1, 1, alpha * 0.3)
                 glPointSize(10)
@@ -431,7 +427,6 @@ class InsanitySystem:
 
 insanity = InsanitySystem()
 
-# ============= КЛАССЫ =============
 class Ammo:
     def __init__(self, x, z):
         self.x = x
@@ -807,7 +802,6 @@ class Player:
         self.ammo = min(self.max_ammo, self.ammo + count)
         effect.add_particles(self.x, self.y, self.z, 25)
 
-# ============= ОТРИСОВКА =============
 def draw_world():
     for x in range(-8, 9):
         for z in range(-8, 9):
@@ -889,7 +883,6 @@ def draw_weapon():
     glEnd()
     glPopMatrix()
 
-# ============= HUD =============
 def draw_hud():
     global insanity
     
@@ -904,7 +897,6 @@ def draw_hud():
     g = 1 + math.cos(effect.psychedelic * insanity.psychedelic_boost * 1.3) * 0.15
     b = 1 + math.sin(effect.psychedelic * insanity.psychedelic_boost * 0.7) * 0.15
     
-    # HP
     if player.health < 30 and random.random() < 0.5:
         color = (255, 0, 0)
     else:
@@ -912,7 +904,6 @@ def draw_hud():
     surf = font.render(f"HP: {player.health}", True, color)
     hud_surface.blit(surf, (10, 10))
     
-    # AMMO
     ammo_color = (255, 255, 0) if player.ammo > 0 else (255, 0, 0)
     if player.reloading:
         ammo_text = f"AMMO: {player.ammo}/{player.max_ammo} [RELOADING...]"
@@ -921,19 +912,16 @@ def draw_hud():
     surf = font.render(ammo_text, True, ammo_color)
     hud_surface.blit(surf, (10, 50))
     
-    # KILLS
     kills_color = (255, 100, 100)
     if player.kills >= 40:
         kills_color = (255, 0, 0)
     surf = font.render(f"KILLS: {player.kills}", True, kills_color)
     hud_surface.blit(surf, (10, 90))
     
-    # ENEMIES
     alive = sum(1 for e in enemies if e.alive)
     surf = font.render(f"ENEMIES: {alive}", True, (100, int(255 * min(1, g*0.8)), 100))
     hud_surface.blit(surf, (10, 130))
     
-    # EFFECTS
     y_offset = 170
     if player.pill_effects['speed'] > 0:
         surf = font.render("SPEED x2", True, (0, 255, 0))
@@ -942,12 +930,7 @@ def draw_hud():
     if player.pill_effects['psychedelic'] > 0:
         surf = font.render("PSYCHO", True, (255, 0, 255))
         hud_surface.blit(surf, (10, y_offset))
-        y_offset += 28
-        if music_manager.effect_active:
-            surf = font.render("MUSIC BOOST", True, (255, 255, 0))
-            hud_surface.blit(surf, (10, y_offset))
     
-    # Предупреждения
     if player.kills >= 40 and random.random() < 0.2:
         surf = big_font.render("REALITY SHIFT", True, (255, 0, 255))
         hud_surface.blit(surf, (WIDTH//2 - surf.get_width()//2, HEIGHT//2 - 100))
@@ -955,7 +938,6 @@ def draw_hud():
         surf = big_font.render("INSANITY", True, (255, 0, 0))
         hud_surface.blit(surf, (WIDTH//2 - surf.get_width()//2, HEIGHT//2 - 100))
     
-    # Красные края
     if player.health < 50 or player.kills > 20:
         alpha = min(150, int((50 - player.health) / 50 * 100 + player.kills / 2))
         red_surf = pygame.Surface((WIDTH, 10), pygame.SRCALPHA)
@@ -969,7 +951,6 @@ def draw_hud():
         hud_surface.blit(red_surf_v, (0, 0))
         hud_surface.blit(red_surf_v, (WIDTH-10, 0))
     
-    # Прицел
     if player.kills > 35:
         color = (random.randint(150, 255), random.randint(0, 50), random.randint(0, 50))
     else:
@@ -980,11 +961,9 @@ def draw_hud():
     pygame.draw.line(hud_surface, color, (WIDTH//2, HEIGHT//2 - s), (WIDTH//2, HEIGHT//2 - 4), 2)
     pygame.draw.line(hud_surface, color, (WIDTH//2, HEIGHT//2 + 4), (WIDTH//2, HEIGHT//2 + s), 2)
     
-    # Эффекты безумия
     if player.kills > 5:
         hud_surface = insanity.apply_effects(hud_surface)
     
-    # Отрисовка HUD
     data = pygame.image.tostring(hud_surface, "RGBA", True)
     
     glMatrixMode(GL_PROJECTION)
@@ -1008,7 +987,6 @@ def draw_hud():
     glPopMatrix()
     glMatrixMode(GL_MODELVIEW)
 
-# ============= ИНИЦИАЛИЗАЦИЯ =============
 player = Player()
 enemies = []
 bullets = []
@@ -1047,13 +1025,6 @@ pill_spawn_timer = 0
 ammo_spawn_timer = 0
 game_over = False
 enemy_level = 1
-
-print("=== P$YCH0 $H00T3R ===")
-print("WASD - Move | Mouse - Aim | Click - Shoot")
-print("R - Reload | Collect AMMO for bullets")
-print("Collect PILLS for effects!")
-print("INSANITY: More kills = more chaos. No limits!")
-print("ESC - Exit")
 
 while running:
     for event in pygame.event.get():
@@ -1225,7 +1196,7 @@ while running:
     
     draw_world()
     effect.draw_flying_cubes()
-    insanity.draw_fake_pills()  # ФАНТОМНЫЕ ТАБЛЕТКИ
+    insanity.draw_fake_pills()
     
     for pill in pills:
         pill.draw()
@@ -1248,20 +1219,7 @@ while running:
     draw_hud()
     
     if game_over:
-        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        overlay.fill((255, 0, 0, 150))
-        screen.blit(overlay, (0, 0))
-        
-        font_big = pygame.font.Font(None, 80)
-        font_small = pygame.font.Font(None, 40)
-        
-        surf = font_big.render("GAME OVER", True, (255, 255, 255))
-        screen.blit(surf, (WIDTH//2 - surf.get_width()//2, HEIGHT//2 - 80))
-        
-        surf = font_small.render(f"Kills: {player.kills}", True, (255, 255, 255))
-        screen.blit(surf, (WIDTH//2 - surf.get_width()//2, HEIGHT//2 + 20))
-        
-        pygame.display.flip()
+        show_fake_error()
         pygame.time.wait(3000)
         running = False
     
@@ -1269,4 +1227,3 @@ while running:
     clock.tick(60)
 
 pygame.quit()
-print(f"Kills: {player.kills}")
